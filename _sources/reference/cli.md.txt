@@ -2,6 +2,13 @@
 
 ```text
 agmsim run <scenario> [--set KEY=VALUE]... [--json] [--quiet]
+agmsim check [scenario] [--set KEY=VALUE]... [--quick] [--roads FILE]
+agmsim record export <run directory> [--out FILE] [--situations DIR] [--limit N] [--inside DIR]
+agmsim record read <cabin session> [--situation FILE] [--out FILE]
+agmsim record apply <run directory> <records FILE>
+agmsim traffic export <run directory> <situation FILE> --inside DIR [--out FILE] [--onward-delay SHARE] [--decision-seconds SECONDS] [--decision-step SECONDS] [--rate {5,10}]
+agmsim traffic check <traffic FILE>
+agmsim network export <scenario> <folder> [--set KEY=VALUE]... [--inside NODE=LAYOUT]
 agmsim serve [--host HOST] [--port PORT]
 agmsim matrix <scenario> --factor KEY=V1,V2 [--factor ...] [--seeds N] [--workers N] [--metric M] [--out DIR]
 agmsim replay <run directory>
@@ -13,6 +20,10 @@ agmsim list
 | Command | What it does |
 | - | - |
 | `run` | runs one simulation, prints the outcome measures, writes `runs/<name>/` |
+| `check` | runs a scenario (the testbed by default) and checks that it is plausible; for the testbed also against the survey numbers it is tuned to; `--roads` writes what drove on every road |
+| `record` | `export` writes every decision of a run as a decision record (who decides for whom, why, what it saw, what it may do, whose approval is needed, what it chose, what came of it) and the decision points the cabin simulator can show; `read` turns a ride recorded by the cabin into the same records, from the session folder alone (it holds the situation the cabin played; `--situation` checks the ride against a file of yours); `apply` runs the run again with a rider's choice in the agent's place, and refuses an answer to a decision point the run does not have or shows differently |
+| `traffic` | `export` uses SUMO and a recorded city run to make a version 1 offline traffic recording for a cabin situation. `--onward-delay` sets the share of delay beyond a gateway to show there (default 0). `--decision-seconds` sets the requested time from the card to the last choice deadline (default 30, or 0 for the earliest slot alone). `--decision-step` spaces choice slots (default 10 seconds), and `--rate` sets how many times per second surrounding cars are sampled (5 by default, also accepts 10). Output defaults to `<situation>.traffic.json` with the original `.json` suffix replaced. `check` validates the recording without SUMO. See [](../guide/cabin.md#surrounding-traffic-for-a-ride). |
+| `network` | `export` writes a scenario's road network as GMNS tables (`node.csv`, `link.csv`, `config.csv`), which `network: {type: gmns}` reads back to the same network; `--inside` adds the cabin's small city as the inside of one node, and `record export --inside` then writes only the decision points at that node, each with the ride through the cabin's city it is part of |
 | `serve` | starts the web interface on your machine |
 | `matrix` | runs every combination of the factors' levels over common seeds; `--llm-2x2` adds the human and machine LLM switches as factors |
 | `replay` | re-executes a recorded run from its decisions and verifies the state after every tick |
@@ -21,6 +32,12 @@ agmsim list
 | `list` | lists scenarios, kinds of agent, agency levels, decision models, presets and plug-ins |
 
 `<scenario>` is `montreal` or the path of a YAML file.
+
+If a traffic recording exceeds 8 MB, export at `--rate 5` or increase `--decision-step` to record fewer slots.
+
+For recorded traffic sessions, `record read` reports the option submitted and the option and slot carried
+out. `record apply` uses the carried-out option for a question put to the rider. See
+[the cabin guide](../guide/cabin.md#back-from-the-cabin-and-into-the-run).
 
 Experiments with paired differences: `python experiments/suite.py [name] [--seeds N] [--llm PRESET]`, see
 [](../guide/experiments.md).

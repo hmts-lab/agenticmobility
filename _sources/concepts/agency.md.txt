@@ -44,6 +44,34 @@ agents:
 
 An event can change agency during a run (`type: set_agency`).
 
+## Who has to agree
+
+What an agent may do and who has to agree before it is carried out are two things. For private cars they can
+be set apart:
+
+```yaml
+agents:
+  vehicle:
+    agency: L1          # what the car may do: here, take another route when traffic changes
+    approval: owner     # who has to agree while the owner is on board
+```
+
+| `approval` | Another route | A transfer to transit (levels that can propose one) |
+| - | - | - |
+| `level` (default) | the car takes it by itself | the owner accepts or declines |
+| `owner` | the owner accepts or declines | the owner accepts or declines |
+| `none` | the car takes it by itself | the car takes its owner to the stop without asking |
+
+Under `owner` the car puts the other route to its owner and stays on its route until the answer comes. The
+owner is a traveller like any other: it takes its thinking time (`agents.traveler.think_seconds`) and answers
+with its own decision model, the built-in one by weighing toll, the cost of driving and its own value of time.
+If the car has passed the turning by then, the agreement comes too late and the car looks again from where it
+is. A route that the owner declined is not proposed again on that trip. An owner whose level gives no say
+over the car's proposals (below L2) is not asked: the proposal is carried out.
+
+The results say what came of asking: `route_proposals`, and of those `route_proposals_accepted`,
+`route_proposals_declined` and `route_proposals_too_late`; `transfers_without_asking` under `none`.
+
 ## Kinds interact
 
 A level-4 vehicle chooses a station by the price a level-1 station set; an orchestrator's advisory lets even

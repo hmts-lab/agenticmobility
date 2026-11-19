@@ -1,0 +1,293 @@
+# The decision record and the cabin
+
+AgMSim is being joined with a second simulator: AgV Lab, a robotaxi cabin on Apple Vision Pro in which a
+rider talks with the car's agent. The two meet at the **decision point**. A car in the network that may
+take another route and the agent in the cabin that asks its rider about another route are the same thing,
+seen at two scales. This page says how a decision point is written down so that both can use it, what the
+network simulation hands to the cabin, and what it reads back.
+
+## A decision as a record of seven things
+
+`agmsim/record.py` writes every decision of a run in one form:
+
+| Key | What it says | In the network simulation, for a car that may take another route |
+| - | - | - |
+| `who` | who decides, at what level, and for whom | car V467 at level L1, for its owner H467 |
+| `trigger` | why it was asked | it is driving and may reconsider how to reach its destination |
+| `sees` | what it was shown | the route it is on takes 50 minutes, another one 20; its battery; its memory |
+| `may`, `default` | what it may do, and what happens where it has no say | follow route 0 or route 1; by default stay on its route |
+| `approval` | who has to agree before what was chosen is carried out | nobody: what the car chooses is carried out |
+| `chose` | what was chosen, by what and why | route 1; the built-in model; "fastest known route" |
+| `outcome` | what came of it | switched route; arrived 31.5 minutes later |
+
+`may` and `approval` are kept apart on purpose. The two simulators name their levels alike, 0 to 4 after the
+same paper, but differ in who is asked:
+
+| Level | A private car in AgMSim may | Who agrees | In the cabin |
+| - | - | - | - |
+| 0 non-agentic | follow the route fixed at departure | nobody is needed | fixed status updates; the rider is not asked |
+| 1 context-aware | re-route around congestion and incidents | nobody: it acts by itself | a predefined response; the rider is not asked |
+| 2 dialogic | also weigh time against money as its owner would | nobody: it acts by itself | the rider chooses, or agrees in conversation |
+| 3 adaptive | also propose a change of plan to its owner | the owner accepts or declines | the rider chooses; the agent clarifies and explains |
+| 4 reflective | also decide when and where to charge | nobody: it acts by itself | the rider chooses; the agent asks before outside coordination |
+
+"Who agrees" is the default here. A run can set it apart from the level (`agents.vehicle.approval`, see
+[](../concepts/agency.md)): with `approval: owner` the car asks its owner about another route too, as the cabin
+asks its rider from level 2 on. The owner's answer in the run and the rider's answer in the cabin are then one
+and the same decision point.
+
+## From a run to a situation for the cabin
+
+```bash
+agmsim run montreal --set record.observations=all          # "all" also keeps what an agent saw where the default applied
+agmsim record export runs/<name> --situations situations/  # every decision as a record; the situations the cabin can show
+```
+
+Four kinds of decision point can be put to a rider, each as one of the cabin's scenes:
+
+| Decision point in the run | Scene in the cabin | Options |
+| - | - | - |
+| a car may take another route | Road closure; Weather disruption while weather slows the roads | stay on this route, or take the other one |
+| a car proposes to its owner to park and go on by transit | Road closure | agree, or keep driving |
+| a car proposes another route to its owner (in a run with `agents.vehicle.approval: owner`) | Road closure; Weather disruption while weather slows the roads | stay on this route, or take the proposed one |
+| a car with its owner on board cannot reach the destination without charging | Charging and arrival | the station on the way, or another one |
+
+A situation is the record without `chose` and `outcome` (what the simulated agent answered is not for the
+rider to see), with a `cabin` block added. A decision point whose texts are longer than the cabin accepts
+(an id of 256 bytes, a briefing of 1,200, a label of 120) is left out.
+
+`examples/situations/` has one file of each kind (the cabin ships with the first four of them):
+
+| File | Made with |
+| - | - |
+| `road-closure.json`, `charging.json` | `agmsim run montreal --set record.observations=all` |
+| `downtown-route.json` | the same with `--set agents.vehicle.observation.route_roads=true`, the run named `montreal-downtown-seed1`, exported with `--inside examples/networks/montreal-downtown` |
+| `downtown-proposal.json` | the same again with `--set agents.vehicle.approval=owner`, the run named `montreal-owner-seed1` |
+| `weather.json` | the same, with rain all morning and the run named `montreal-rain-seed1`: `--set 'events=[{"type":"weather","label":"rain","at_seconds":0,"speed_factor":0.85,"walk_factor":0.9,"discomfort":1.5}]'` |
+| `transfer-proposal.json` | `agmsim run tests/scenarios/bottleneck.yaml --set agents.vehicle.agency=L3 --set record.observations=all` |
+
+The cabin's weather scene shows rain. A run whose weather is called something else is still shown as rain,
+so name the weather `rain` in a run meant for the cabin.
+
+| In the `cabin` block | Meaning | What the cabin does with it |
+| - | - | - |
+| `scenario` | one of the cabin's eight scenes (`roadClosure`, `weatherDisruption`, `energyPlanning`, ...) | shows that scene and its props |
+| `briefing` | the situation in plain words, with its minutes, kilometres and prices | shows and speaks it in place of the scene's own briefing |
+| `options` | two options, each with a `label`, its `minutes` and cost, and `answer`: the action it stands for in the run | shows the two labels as the two choices; `answer` is not its concern |
+| `trigger_seconds` | how far into the ride the card appears (20) | shows the card then |
+| `weather` | the weather in effect, if any | nothing: the scene decides what is seen |
+| `in_the_simulation` | who decided this in the run (for the experimenter) | not shown to the rider |
+
+## The cabin's city as the inside of a node
+
+A node of the testbed stands for a district. The cabin's small city (a grid of streets with nine places) is
+taken to be the inside of one of them, Downtown. A trip that passes Downtown can then be told as a ride
+through the cabin's streets: in where its road meets the district, out where its next road leaves, or to a
+place there.
+
+Both simulators read this from one set of tables, in GMNS form (`examples/networks/montreal-downtown/`):
+
+```bash
+agmsim network export montreal examples/networks/montreal-downtown --inside Downtown=<cabin city-layout.json>
+```
+
+| Table | What it holds |
+| - | - |
+| `node.csv` | the testbed's 25 nodes, and the cabin's 21 with `parent_node_id` 0 (Downtown) and the layout's name as `zone_id` |
+| `link.csv` | the testbed's 102 one-way roads and the cabin's 24 streets; a road that meets Downtown says in `inner_node_id` where it enters the streets |
+| `location.csv` | the cabin's nine places, each with a `role` where trips use it: `arrivals` (Office), `departures` (Residence), `charging`, `transit` |
+| `config.csv` | units, and the point local metres are measured from |
+
+`inner_node_id`, `role` and the place's `name` are columns of this project; the rest is GMNS's own. Each of the
+six roads at Downtown enters at the intersection on the edge of the grid that lies its way, and that
+intersection is named in `node.csv` after the road and where it leads ("Peel towards McGill"), which is what a
+rider is shown:
+
+| Road | From | Enters the cabin's streets at |
+| - | - | - |
+| Peel | McGill | `n0_2` (north-west corner) |
+| R-136 Ville-Marie | Centre-Sud | `n2_2` (north-east corner) |
+| Rene-Levesque | Old Montreal | `n2_1` (east side) |
+| A-10 Bonaventure | Verdun | `n1_0` (south side) |
+| R-136 Ville-Marie | Turcot | `n0_0` (south-west corner) |
+| Cote-des-Neiges | Cote-des-Neiges | `n0_1` (west side) |
+
+```bash
+agmsim run montreal --set record.observations=all --set agents.vehicle.observation.route_roads=true
+agmsim record export runs/<name> --situations situations/ --inside examples/networks/montreal-downtown
+```
+
+With `--inside`, only the decision points at that node are written: the car is about to enter Downtown, or
+sets off from it. Routes have to say which junctions they pass (`route_roads`; with the built-in decision
+models that changes nothing in the run). Such a situation says the ride it is part of:
+
+| In the `cabin` block | Meaning | What the cabin does with it |
+| - | - | - |
+| `place` | the node (`node`, `name`) and the layout that is its inside (`inside`) | refuses a file made for another layout than its own |
+| `journey` | where the ride starts (`origin`) and where it is heading as it starts (`stops`) | plans this ride in place of the scene's own |
+| `options[i].journey` | where the car heads if this option is chosen | re-routes the ride there when the rider chooses it |
+
+An `origin` or stop is one of the cabin's places or an intersection on the edge of its grid. A ride that
+starts at such an intersection enters the city there, and one that reaches it has left the district. On a
+testbed morning six to ten decision points lie at Downtown; `examples/situations/downtown-route.json` and
+`downtown-proposal.json` are two of them.
+
+## What the cabin does with a situation
+
+Three things, everything else as it is:
+
+1. **It loads a situation file** and uses its `id` and `cabin` block as above. A file that is not a
+   situation (another format or version, a scene the cabin does not have, not exactly two options) is
+   refused.
+2. **It writes the situation into its recording**: a detail `situation` with the id in the events
+   `scenario_reset`, `scenario_triggered` and `scenario_choice`; `situationID` and `situationSHA256` in
+   `metadata.json`; and the file itself, as it was loaded, as `situation.json` in the session folder. A
+   session folder thus says by itself what the rider was told.
+3. **It tells its dialogue backend the briefing and the options**, so that rider and agent talk about this
+   situation's numbers.
+
+A choice stays one of two, recorded as `choice_index` 0 or 1 with `control` saying how it was made
+(`scenario_choice_<i>` for a button, `agent_plan` for a choice agreed in conversation). A situation's options
+do not change the ride in the cabin's own small city, unless they say where they lead (`options[i].journey`,
+above): the choice is recorded and acknowledged. A ride on one of the cabin's own scenes, without a situation,
+is recorded as before and names none.
+
+## Surrounding traffic for a ride
+
+`traffic export` makes one offline traffic recording for a situation. The version 1 file identifies the
+exact situation by its SHA-256 and has one ride for each option at each choice slot.
+`downtown-route.traffic.json` goes with `downtown-route.json`. To make it again from the repository root,
+use the same named city run and SUMO 1.28.0.
+
+```bash
+agmsim run montreal --set record.run_name=montreal-downtown-seed1 \
+  --set record.observations=all --set agents.vehicle.observation.route_roads=true
+uv run --no-project --with eclipse-sumo==1.28.0 --with pyyaml python -m agmsim.cli traffic export \
+  runs/montreal-downtown-seed1 examples/situations/downtown-route.json \
+  --inside examples/networks/montreal-downtown --onward-delay 0.18 --decision-seconds 30 --decision-step 10
+agmsim traffic check examples/situations/downtown-route.traffic.json
+```
+
+An existing SUMO installation also works with `agmsim traffic export`. The command looks for `sumo` and
+`netconvert` on `PATH`, in `SUMO_HOME/bin`, or in the installed SUMO package. The validator runs with
+AgMSim alone. If the named run directory already exists, use the new directory printed by `agmsim run`.
+
+The Mac and visionOS apps look for the recording beside the situation file. They check that it matches the
+situation and the cabin's streets before using it. If the recording fails validation, the cabin shows the
+reason, logs a `traffic_refused` event, and continues with the ordinary situation ride.
+
+AgMSim replays the recorded city run with its built-in decision models. For now, the exporter refuses runs
+with language-model decisions. It counts traffic in both directions at each gateway over the 30 minutes
+before the decision, or from the beginning of the run for an early
+decision. Each city mover represents many road users, so a half hour gives more stable counts than the
+length of the ride. The recording keeps the counts, estimated capacity, speed and queues for each direction,
+as well as the shares of movements between gateways and places in the district.
+
+An entrance with more city traffic relative to its capacity gets more departures in SUMO. The demand
+index `entries_per_nominal_exit_capacity` divides all entries by the nominal capacity at the end of the
+road. Entries include vehicles that finish their trip or reach a bus stop there without using the stop
+line, so the index can exceed one even when the road is clear. The departure rate uses entries divided
+by entries plus capacity, multiplied by a ceiling of 2.7 district cars per minute. The observed movements
+decide where those cars go. Traffic that starts or ends inside uses the Residence or Office. Slow inbound
+roads lower the speed on the approach, with a floor of 2 m/s on the miniature road.
+
+By default, only the speed on the city road that leaves the gateway sets the exit wait, based on the added
+time to drive 60 m at that speed ratio. `--onward-delay` can also show a share of an option's delay beyond
+its gateway. The larger wait applies, capped at 75 seconds, and the queue at McGill in the example stands
+for the delay on Sherbrooke. SUMO runs the traffic for seven minutes before the ride starts, so a slow exit
+can back a queue into the district.
+A closed city road direction is marked at its gateway and left out of the demand. The command refuses a
+situation if an option would need that closed direction or if the routes have no shared branch in the district.
+
+The streets are one lane each way with all-way stops. The ride clock starts at its origin and ends at the
+chosen stop. SUMO simulates the shared approach once and saves its state at the branch for each choice slot.
+Each option continues from that slot's saved state. The `branch` block gives the shared intersection
+(`node`), the time the card appears (`trigger`), and the fallback option (`default`). The fallback is the
+option whose answer matches the situation's default. A situation without a matching option is refused.
+Each entry in `branch.slots` gives the choice deadline (`decide_by`) and when the hold at the stop line ends
+(`time`), three seconds later. The first slot holds only until the car is stopped at the line and three
+seconds have passed since the card appeared. `--decision-step` spaces the following deadlines (10 seconds
+by default), and `--decision-seconds` sets the requested time from the card to the last deadline (30 seconds
+by default). Set it to zero for the first slot alone. Deadlines that would release the car before it reaches
+the stop line share the first available slot. Release times round up to the next SUMO step of 0.1 seconds
+when needed. The ride's `slot` indexes the list. `state.district.slot_hold_seconds` records the time spent
+holding at the stop line in the same order.
+
+The cabin starts on the default ride in the last slot. At levels 2 to 4, the card and the agent say how long
+the car can wait. On the rider's first timely answer, the cabin switches to
+the chosen option in the first slot whose deadline is at or after the answer's ride time. The rider can
+change the option through that slot's deadline, including at the deadline. The rides share the same car
+and traffic samples through the slot's release time, so the switch keeps the same clock and positions.
+The cabin records a late answer and tells the rider which option the car is taking. When a rider answers
+after the chosen slot's deadline, the car continues with the last timely choice. When all answers are late
+or the rider never answers, the car follows the default in the last slot. At levels 0 and 1, the cabin
+automatically chooses the default at the trigger and uses the first slot.
+
+The cabin replays the rider's car at 30 samples per second. The surrounding cars have 5 by default, or
+10 with `--rate 10`. If the recording exceeds 8 MB, use `--rate 5`, increase `--decision-step`, or shorten
+`--decision-seconds` to record fewer slots.
+Each sample of the rider's car includes distance along its lane, calculated from the simulated speed.
+Its position and distance are written to 0.0001 m to keep rounding from adding jolts at that sample rate.
+The recording plays offline from the saved tracks. Pausing stops the whole world, and a lower speed limit
+slows the whole world. During playback the cabin declines requests to change the destination or route
+or to pull over. It draws up to 16 nearby vehicles, prioritizing the nearest. The web preview uses its
+own street scene and has no city traffic playback.
+
+## Back from the cabin, and into the run
+
+```bash
+agmsim record read <cabin session> --out back.jsonl
+agmsim record apply runs/<name> back.jsonl
+```
+
+`record read` takes the folder the cabin wrote for a ride (`metadata.json`, `events.ndjson`,
+`situation.json`) and returns the ride's decision points as records. It reads `scenario_reset` and
+`scenario_triggered` (the scene, the level, when the card appeared), `scenario_choice` (the option, how it
+was chosen, whether it replaced an earlier one) and, for the outcome, `agent_action_applied`,
+`itinerary_planned`, `route_replanned`, `route_pause` and `route_complete`. With the situation the ride was
+run on, the record says which decision point of the run it answers (`about`) and what the rider's choice is
+as an action there (`chose.answer`).
+
+With recorded traffic, the session saves the original bytes as `traffic.json` and sets `trafficID`,
+`trafficSHA256`, and `trafficClosedEdges` in `metadata.json`. The reader verifies the file's SHA-256 and its
+link to the exact situation. It reports the recording ID and hash in `outcome.traffic` and checks that
+the carried-out fields in `scenario_choice` agree with the active ride in `traffic_ride_changed`.
+`chose` holds the last timely rider reply. The automatic `traffic_default` event at levels 0 and 1
+records that nobody chose. `outcome.late_choices` preserves late submissions and their times, and
+`outcome.carried_out` gives the executed option, its action, the slot, and its deadline and release time.
+The printed line calls out late submissions and unanswered questions. A ride with a refused recording
+is read as an ordinary situation ride.
+
+A session that was exported from the headset file by file may hold the events only as a table (`events.csv`)
+and no `situation.json`. The reader takes the table, and the situation from `--situation <file>`, which it
+checks against the SHA-256 in `metadata.json`: it has to be the very file the cabin loaded. If the export
+also omits `traffic.json`, the reader uses matching traffic evidence from the metadata and events.
+It needs the situation file to recover the action an option stands for.
+
+The reader does not take a ride for something it is not. The situation in the session folder must be the file
+the cabin loaded (its SHA-256 is in `metadata.json`), the events must name it, and the label the rider chose
+must be that option's label. `--situation <file>` checks the ride against a file of your own: it must be the
+same situation with the same text. A ride that names no situation answers no decision point.
+
+`record apply` runs the recorded run again with the cabin's answer at that decision point, also where the
+agent had no say. For a recorded traffic question it uses `outcome.carried_out.answer`. This retains a
+timely choice after a late reply and applies the last-slot default after an unanswered question or
+one with only late replies. The automatic default at levels 0 and 1 supplies no override. For an
+ordinary ride, it uses `chose.answer`. In Python the same mechanism is
+`Simulation(config, answers={(agent, tick): action})`. One decision point can thus be answered by a rule,
+by a language model or by a person, and what follows from each answer can be compared.
+
+`record apply` takes a rider's answer only for the decision point the rider was shown. A record that names
+a decision point the run does not have, or one at which the run shows something else than the rider was told
+(another run, or the same scenario after a change), is refused.
+
+Not every ride the cabin records is a rider's. Its check program records one under the participant code
+`automated_fixture`, and the Mac preview can rehearse a ride by itself under the code `REHEARSAL`. Such a
+ride goes through the cabin like any other, but nobody chose anything in it: a record read from it says who
+stood in for the rider (`who.stand_in`, and `chose.by` names the program), and `record read` marks its line
+`[not a rider: ...]`.
+
+`agmsim.record.stand_in_session` writes what the cabin records for a ride on a situation, without the cabin.
+For a traffic session, give it the exact situation file and the recording path as `traffic`.
+Use `choice_route_seconds` for one submitted choice or `choice_attempts` for a list of option indices
+paired with their ride times. It is a stand-in for tests, not data from a rider.

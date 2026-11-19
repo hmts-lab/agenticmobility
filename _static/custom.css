@@ -1,3 +1,8 @@
+/* the start page opens with the logo; its heading stays for the page title and for screen readers */
+.hero-logo { margin: 0.2rem 0 1.4rem; }
+.hero-logo img { width: min(27rem, 88%); height: auto; }
+section:has(> .hero-logo) > h1 { position: absolute; width: 1px; height: 1px; overflow: hidden;
+                                 clip-path: inset(50%); white-space: nowrap; }
 /* the simulator on the start page: wider than the text column, in a frame */
 .content:has(.sim-embed) { width: min(76em, 100%); }
 .sim-embed { margin: 1.2rem 0 0.4rem; }

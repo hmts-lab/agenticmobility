@@ -17,12 +17,45 @@ current state, the actions and the exogenous input, never on how the state was r
 needs no state of its own. This is why a recorded run can be replayed decision by decision to the identical
 state, and why the same model can be put behind any agent.
 
+## Decisions that take time
+
+A kind's decisions may take time (`agents.<kind>.think_seconds`). The agent is shown the state as it is, and
+its decision takes effect that much later, whoever decides: a rule, an algorithm or a language model. In
+between the world moves on and the agent carries on as it was. When the decision takes effect it is carried
+over to the state as it is by then; if it no longer applies (the car has passed the turning, the bus has
+come) it is dropped as having come too late, and the agent is asked again if there is still something to
+decide. A traveller who has a say starts deciding early enough to have decided when the trip is due.
+
+Two things follow. A rule and a language model are compared like for like, both taking the same time. And
+because an answer is not needed before the decision takes effect, the calls to a language model made within
+one thinking time run side by side instead of each holding up the clock. On the testbed a traveller takes two
+minutes over how to travel, a car half a minute over its route, a charging station and the orchestrator a
+minute.
+
 ## Traffic
 
-Roads congest: the speed on a road falls linearly with the number of vehicles on it. A junction with traffic
-lights holds vehicles at the end of their road until their approach has green; they are let through in
-arrival order at the saturation flow, and a change of green costs a few seconds. Each simulated car stands
-for several real ones (`network.capacity_scale`).
+Roads are queues (`network.traffic: queue`). Every road has an exit capacity, the vehicles per hour and lane
+that can leave it, and a storage, the vehicles that fit on it bumper to bumper. A vehicle drives along a road
+at the free speed, then waits at its end, first come first served, until the exit has capacity for it and the
+next road has room. A full road lets nobody in, so its queue grows back onto the road behind it; room that
+opens at the front of a full road reaches its entrance only once the gap has travelled back along the queue.
+A junction with traffic lights lets a road out only while its approach has green, at the saturation flow, and
+a change of green costs a few seconds. An incident or bad weather cuts what a road lets out as it cuts its
+speed. Each simulated car stands for several real ones (`network.capacity_scale`).
+
+This is the link transmission model applied to single vehicles, the theory behind MATSim's queue model and
+UXsim. Given the same network, vehicles, departure times and routes it reproduces the theoretical delay of
+elementary cases within 3% and UXsim's mean trip times on the testbed's network within 1% to 6%
+(`experiments/uxsim_check.py`). The earlier model, in which a road slows with the vehicles on it and never
+fills, remains as `network.traffic: density`.
+
+## Checking a run
+
+`agmsim check` runs a scenario and holds it against a fixed list: every trip has one outcome, vehicles are
+conserved on every road, no car is faster than free flow, no road holds more than fits on it or lets through
+more than its capacity, the same seed gives the same run, and with more travellers or less road car trips do
+not get quicker. For the testbed the list ends with the survey numbers it is tuned to, see
+[](../testbed.md).
 
 ## Reproducibility
 

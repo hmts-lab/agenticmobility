@@ -18,11 +18,14 @@ keeps what shapes traffic in the city:
 - **a ring of expressways**: the A-40 Metropolitan, the A-15 Decarie, the A-20, the Ville-Marie and the A-25;
 - **the arterials between them**: Sherbrooke, Saint-Denis, Papineau, Pie-IX, Henri-Bourassa and others.
 
-| Class of road | Roads | Free-flow speed | Lanes each way |
-| - | - | - | - |
-| expressway | 15 | 90 km/h | 3 |
-| bridge or tunnel | 8 | 60 to 70 km/h | 2 or 3 |
-| arterial | 28 | 50 km/h | 2 |
+| Class of road | Roads | Free-flow speed | Lanes each way | Lets out, per lane and hour |
+| - | - | - | - | - |
+| expressway | 15 | 80 km/h | 3 | 2,000 vehicles |
+| bridge or tunnel | 8 | 60 to 70 km/h | 2 or 3 | 1,600 to 1,900 |
+| arterial | 28 | 36 km/h | 2 | 850 |
+
+An arterial here is several kilometres of street with lights along the way: its free speed and its capacity
+are what they leave of a 50 km/h limit and of a lane's saturation flow.
 
 | Id | Node | Id | Node | Id | Node |
 | - | - | - | - | - | - |
@@ -37,8 +40,8 @@ keeps what shapes traffic in the city:
 | 8 | Decarie / A-40 | 17 | Mercier-Est | | |
 
 Positions are approximate (read off a map by district), lengths are straight-line distances times 1.2,
-speeds and lanes are typical values for the class of road. **It is an abstraction to experiment on, not a
-calibrated model of the city.**
+speeds, lanes and capacities are typical values for the class of road. **Road by road it is an abstraction
+to experiment on, not a model of the city.** The morning as a whole is tuned to survey numbers, see below.
 
 ## The morning
 
@@ -46,18 +49,37 @@ calibrated model of the city.**
 
 | Part | In the testbed |
 | - | - |
-| Travellers | 900, living where people live (weights by district), 65% with a car; most set out around 08:00 |
+| Travellers | 900, living where people live (weights by district), 70% with a car; most set out around 08:00 |
 | Places | 21 named destinations: downtown offices, the Technoparc, YUL airport, McGill, UdeM, UQAM, three hospitals, markets and malls, the Bell Centre, the Olympic Park |
 | Private cars | one per car-owning traveller, electric, level L1 (re-route on traffic) |
-| On-demand cars | a fleet of 40, level L1 |
-| Transit | four lines on their own right of way, drawn as loops: Orange, Green, South, West |
+| On-demand cars | a fleet of 12 at a taxi's tariff, level L1 |
+| Transit | four lines on their own right of way, drawn as loops: Orange, Green, South, West; ordinary buses everywhere, as timed trips |
 | Traffic lights | at 10 junctions of the inner city, deciding by their own queues (L1) |
 | Charging stations | 7 stations, 17 chargers, dynamic price (L1) |
 | Orchestrator | publishes advisories (L1); a cordon around Downtown that can carry a charge |
 | Event | a crash on the Decarie expressway, 07:30 to 08:10, traffic at 30% of its speed |
 
-With these settings and seed 1 every trip is completed, the mean trip takes 15 minutes, 63% of trips are made
-by car, 19% by transit and 18% by on-demand car; a run with the built-in decision models takes about 15 seconds.
+With these settings and seed 1 the mean trip takes 29 minutes, 72% of trips are made by car, 26% by transit
+and 2% by on-demand car; nine trips that start last are still under way at noon. A run with the built-in
+decision models takes about 15 seconds.
+
+## The size of the morning
+
+The morning is tuned so that it comes out at the size surveys give it. `agmsim check` holds a run against
+these numbers, next to its checks of consistency:
+
+| Measure | Survey | Accepted | The testbed, seed 1 |
+| - | - | - | - |
+| a trip, all ways of travelling | 29.0 min ([Statistics Canada, May 2025](https://www150.statcan.gc.ca/n1/daily-quotidien/250826/dq250826a-eng.htm)) | 24 to 34 min | 29.0 min |
+| trips by car | 70% of commuters (Statistics Canada) | 62% to 78% | 72.2% |
+| trips by transit | 22% of trips not on foot, by bike or school bus ([ARTM 2023](https://www.artm.quebec/wp-content/uploads/2024/10/ARTM_Enquete2023_Faits_Saillants.pdf)) | 15% to 30% | 25.7% |
+| trips by on-demand car | 1% (ARTM 2023: other, taxi included) | at most 3% | 1.8% |
+| trips that start before 09:00 | 60% (ARTM 2023) | 50% to 70% | 67.0% |
+| a car trip, door to door | 25.5 km/h ([TomTom 2025](https://www.tomtom.com/traffic-index/city/montreal/), city average) | 18 to 35 km/h | 28.1 km/h |
+
+The simulated trips are those of adults over at least 3 km, so the survey's trips on foot, by bike and by
+school bus have no counterpart. 900 travellers stand for the whole region: one simulated car is a platoon of
+some 250 real ones, so these sizes hold for the morning as a whole, and a single road is coarse.
 
 ## Changing a condition
 

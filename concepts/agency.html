@@ -4,13 +4,15 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Observation, memory, interaction" href="mechanisms.html"><link rel="prev" title="Python usage" href="../quickstart/python.html">
+        <link rel="prefetch" href="../_static/agmsim-logo.png" as="image">
+        <link rel="prefetch" href="../_static/agmsim-logo-dark.png" as="image">
 
-    <!-- Generated with Sphinx 9.1.1 and Furo 2025.12.19 -->
+    <link rel="shortcut icon" href="../_static/agmsim-icon.png"><!-- Generated with Sphinx 9.1.1 and Furo 2025.12.19 -->
         <title>Agents and agency - Agentic Mobility</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=a3cecac6" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=a5d3acf2" />
     
     
 
@@ -182,8 +184,11 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../_static/agmsim-logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../_static/agmsim-logo-dark.png" alt="Dark Logo"/>
+  </div>
   
-  <span class="sidebar-brand-text">Agentic Mobility</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -215,6 +220,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../guide/experiments.html">Experiments</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/llm.html">Language models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/events.html">Places and events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/cabin.html">The decision record and the cabin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/extending.html">Extending</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
@@ -329,6 +335,49 @@ permissions to levels is this simulator’s simplified reading of that table.</p
 </div>
 <p>An event can change agency during a run (<code class="docutils literal notranslate"><span class="pre">type:</span> <span class="pre">set_agency</span></code>).</p>
 </section>
+<section id="who-has-to-agree">
+<h2>Who has to agree<a class="headerlink" href="#who-has-to-agree" title="Link to this heading">¶</a></h2>
+<p>What an agent may do and who has to agree before it is carried out are two things. For private cars they can
+be set apart:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">agents</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">vehicle</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">agency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">L1</span><span class="w">          </span><span class="c1"># what the car may do: here, take another route when traffic changes</span>
+<span class="w">    </span><span class="nt">approval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">owner</span><span class="w">     </span><span class="c1"># who has to agree while the owner is on board</span>
+</pre></div>
+</div>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">approval</span></code></p></th>
+<th class="head"><p>Another route</p></th>
+<th class="head"><p>A transfer to transit (levels that can propose one)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">level</span></code> (default)</p></td>
+<td><p>the car takes it by itself</p></td>
+<td><p>the owner accepts or declines</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">owner</span></code></p></td>
+<td><p>the owner accepts or declines</p></td>
+<td><p>the owner accepts or declines</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
+<td><p>the car takes it by itself</p></td>
+<td><p>the car takes its owner to the stop without asking</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Under <code class="docutils literal notranslate"><span class="pre">owner</span></code> the car puts the other route to its owner and stays on its route until the answer comes. The
+owner is a traveller like any other: it takes its thinking time (<code class="docutils literal notranslate"><span class="pre">agents.traveler.think_seconds</span></code>) and answers
+with its own decision model, the built-in one by weighing toll, the cost of driving and its own value of time.
+If the car has passed the turning by then, the agreement comes too late and the car looks again from where it
+is. A route that the owner declined is not proposed again on that trip. An owner whose level gives no say
+over the car’s proposals (below L2) is not asked: the proposal is carried out.</p>
+<p>The results say what came of asking: <code class="docutils literal notranslate"><span class="pre">route_proposals</span></code>, and of those <code class="docutils literal notranslate"><span class="pre">route_proposals_accepted</span></code>,
+<code class="docutils literal notranslate"><span class="pre">route_proposals_declined</span></code> and <code class="docutils literal notranslate"><span class="pre">route_proposals_too_late</span></code>; <code class="docutils literal notranslate"><span class="pre">transfers_without_asking</span></code> under <code class="docutils literal notranslate"><span class="pre">none</span></code>.</p>
+</section>
 <section id="kinds-interact">
 <h2>Kinds interact<a class="headerlink" href="#kinds-interact" title="Link to this heading">¶</a></h2>
 <p>A level-4 vehicle chooses a station by the price a level-1 station set; an orchestrator’s advisory lets even
@@ -400,6 +449,7 @@ the orchestrator publishes an advisory. See <a class="reference internal" href="
 <li><a class="reference internal" href="#three-independent-settings">Three independent settings</a></li>
 <li><a class="reference internal" href="#the-seven-built-in-kinds">The seven built-in kinds</a></li>
 <li><a class="reference internal" href="#writing-agency-in-a-scenario">Writing agency in a scenario</a></li>
+<li><a class="reference internal" href="#who-has-to-agree">Who has to agree</a></li>
 <li><a class="reference internal" href="#kinds-interact">Kinds interact</a></li>
 </ul>
 </li>

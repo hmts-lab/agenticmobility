@@ -4,13 +4,15 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Installation" href="quickstart/installation.html"><link rel="prev" title="Simulator" href="simulator.html">
+        <link rel="prefetch" href="_static/agmsim-logo.png" as="image">
+        <link rel="prefetch" href="_static/agmsim-logo-dark.png" as="image">
 
-    <!-- Generated with Sphinx 9.1.1 and Furo 2025.12.19 -->
+    <link rel="shortcut icon" href="_static/agmsim-icon.png"><!-- Generated with Sphinx 9.1.1 and Furo 2025.12.19 -->
         <title>The testbed: a simplified Montreal - Agentic Mobility</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=a3cecac6" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=a5d3acf2" />
     
     
 
@@ -182,8 +184,11 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="_static/agmsim-logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="_static/agmsim-logo-dark.png" alt="Dark Logo"/>
+  </div>
   
-  <span class="sidebar-brand-text">Agentic Mobility</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -215,6 +220,7 @@
 <li class="toctree-l1"><a class="reference internal" href="guide/experiments.html">Experiments</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/llm.html">Language models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/events.html">Places and events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/cabin.html">The decision record and the cabin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guide/extending.html">Extending</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
@@ -277,27 +283,33 @@ the Lafontaine tunnel to the South Shore, four bridges to Laval;</p></li>
 <th class="head"><p>Roads</p></th>
 <th class="head"><p>Free-flow speed</p></th>
 <th class="head"><p>Lanes each way</p></th>
+<th class="head"><p>Lets out, per lane and hour</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>expressway</p></td>
 <td><p>15</p></td>
-<td><p>90 km/h</p></td>
+<td><p>80 km/h</p></td>
 <td><p>3</p></td>
+<td><p>2,000 vehicles</p></td>
 </tr>
 <tr class="row-odd"><td><p>bridge or tunnel</p></td>
 <td><p>8</p></td>
 <td><p>60 to 70 km/h</p></td>
 <td><p>2 or 3</p></td>
+<td><p>1,600 to 1,900</p></td>
 </tr>
 <tr class="row-even"><td><p>arterial</p></td>
 <td><p>28</p></td>
-<td><p>50 km/h</p></td>
+<td><p>36 km/h</p></td>
 <td><p>2</p></td>
+<td><p>850</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<p>An arterial here is several kilometres of street with lights along the way: its free speed and its capacity
+are what they leave of a 50 km/h limit and of a lane’s saturation flow.</p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
 <thead>
@@ -377,8 +389,8 @@ the Lafontaine tunnel to the South Shore, four bridges to Laval;</p></li>
 </table>
 </div>
 <p>Positions are approximate (read off a map by district), lengths are straight-line distances times 1.2,
-speeds and lanes are typical values for the class of road. <strong>It is an abstraction to experiment on, not a
-calibrated model of the city.</strong></p>
+speeds, lanes and capacities are typical values for the class of road. <strong>Road by road it is an abstraction
+to experiment on, not a model of the city.</strong> The morning as a whole is tuned to survey numbers, see below.</p>
 </section>
 <section id="the-morning">
 <h2>The morning<a class="headerlink" href="#the-morning" title="Link to this heading">¶</a></h2>
@@ -392,7 +404,7 @@ calibrated model of the city.</strong></p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Travellers</p></td>
-<td><p>900, living where people live (weights by district), 65% with a car; most set out around 08:00</p></td>
+<td><p>900, living where people live (weights by district), 70% with a car; most set out around 08:00</p></td>
 </tr>
 <tr class="row-odd"><td><p>Places</p></td>
 <td><p>21 named destinations: downtown offices, the Technoparc, YUL airport, McGill, UdeM, UQAM, three hospitals, markets and malls, the Bell Centre, the Olympic Park</p></td>
@@ -401,10 +413,10 @@ calibrated model of the city.</strong></p>
 <td><p>one per car-owning traveller, electric, level L1 (re-route on traffic)</p></td>
 </tr>
 <tr class="row-odd"><td><p>On-demand cars</p></td>
-<td><p>a fleet of 40, level L1</p></td>
+<td><p>a fleet of 12 at a taxi’s tariff, level L1</p></td>
 </tr>
 <tr class="row-even"><td><p>Transit</p></td>
-<td><p>four lines on their own right of way, drawn as loops: Orange, Green, South, West</p></td>
+<td><p>four lines on their own right of way, drawn as loops: Orange, Green, South, West; ordinary buses everywhere, as timed trips</p></td>
 </tr>
 <tr class="row-odd"><td><p>Traffic lights</p></td>
 <td><p>at 10 junctions of the inner city, deciding by their own queues (L1)</p></td>
@@ -421,8 +433,60 @@ calibrated model of the city.</strong></p>
 </tbody>
 </table>
 </div>
-<p>With these settings and seed 1 every trip is completed, the mean trip takes 15 minutes, 63% of trips are made
-by car, 19% by transit and 18% by on-demand car; a run with the built-in decision models takes about 15 seconds.</p>
+<p>With these settings and seed 1 the mean trip takes 29 minutes, 72% of trips are made by car, 26% by transit
+and 2% by on-demand car; nine trips that start last are still under way at noon. A run with the built-in
+decision models takes about 15 seconds.</p>
+</section>
+<section id="the-size-of-the-morning">
+<h2>The size of the morning<a class="headerlink" href="#the-size-of-the-morning" title="Link to this heading">¶</a></h2>
+<p>The morning is tuned so that it comes out at the size surveys give it. <code class="docutils literal notranslate"><span class="pre">agmsim</span> <span class="pre">check</span></code> holds a run against
+these numbers, next to its checks of consistency:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Measure</p></th>
+<th class="head"><p>Survey</p></th>
+<th class="head"><p>Accepted</p></th>
+<th class="head"><p>The testbed, seed 1</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>a trip, all ways of travelling</p></td>
+<td><p>29.0 min (<a class="reference external" href="https://www150.statcan.gc.ca/n1/daily-quotidien/250826/dq250826a-eng.htm">Statistics Canada, May 2025</a>)</p></td>
+<td><p>24 to 34 min</p></td>
+<td><p>29.0 min</p></td>
+</tr>
+<tr class="row-odd"><td><p>trips by car</p></td>
+<td><p>70% of commuters (Statistics Canada)</p></td>
+<td><p>62% to 78%</p></td>
+<td><p>72.2%</p></td>
+</tr>
+<tr class="row-even"><td><p>trips by transit</p></td>
+<td><p>22% of trips not on foot, by bike or school bus (<a class="reference external" href="https://www.artm.quebec/wp-content/uploads/2024/10/ARTM_Enquete2023_Faits_Saillants.pdf">ARTM 2023</a>)</p></td>
+<td><p>15% to 30%</p></td>
+<td><p>25.7%</p></td>
+</tr>
+<tr class="row-odd"><td><p>trips by on-demand car</p></td>
+<td><p>1% (ARTM 2023: other, taxi included)</p></td>
+<td><p>at most 3%</p></td>
+<td><p>1.8%</p></td>
+</tr>
+<tr class="row-even"><td><p>trips that start before 09:00</p></td>
+<td><p>60% (ARTM 2023)</p></td>
+<td><p>50% to 70%</p></td>
+<td><p>67.0%</p></td>
+</tr>
+<tr class="row-odd"><td><p>a car trip, door to door</p></td>
+<td><p>25.5 km/h (<a class="reference external" href="https://www.tomtom.com/traffic-index/city/montreal/">TomTom 2025</a>, city average)</p></td>
+<td><p>18 to 35 km/h</p></td>
+<td><p>28.1 km/h</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The simulated trips are those of adults over at least 3 km, so the survey’s trips on foot, by bike and by
+school bus have no counterpart. 900 travellers stand for the whole region: one simulated car is a platoon of
+some 250 real ones, so these sizes hold for the morning as a whole, and a single road is coarse.</p>
 </section>
 <section id="changing-a-condition">
 <h2>Changing a condition<a class="headerlink" href="#changing-a-condition" title="Link to this heading">¶</a></h2>
@@ -498,6 +562,7 @@ agmsim<span class="w"> </span>run<span class="w"> </span>montreal<span class="w"
 <li><a class="reference internal" href="#">The testbed: a simplified Montreal</a><ul>
 <li><a class="reference internal" href="#the-network">The network</a></li>
 <li><a class="reference internal" href="#the-morning">The morning</a></li>
+<li><a class="reference internal" href="#the-size-of-the-morning">The size of the morning</a></li>
 <li><a class="reference internal" href="#changing-a-condition">Changing a condition</a></li>
 </ul>
 </li>

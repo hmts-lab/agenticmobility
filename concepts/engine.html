@@ -4,13 +4,15 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Outcome variables" href="outcomes.html"><link rel="prev" title="Observation, memory, interaction" href="mechanisms.html">
+        <link rel="prefetch" href="../_static/agmsim-logo.png" as="image">
+        <link rel="prefetch" href="../_static/agmsim-logo-dark.png" as="image">
 
-    <!-- Generated with Sphinx 9.1.1 and Furo 2025.12.19 -->
+    <link rel="shortcut icon" href="../_static/agmsim-icon.png"><!-- Generated with Sphinx 9.1.1 and Furo 2025.12.19 -->
         <title>The engine - Agentic Mobility</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=a3cecac6" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=a5d3acf2" />
     
     
 
@@ -182,8 +184,11 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../_static/agmsim-logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../_static/agmsim-logo-dark.png" alt="Dark Logo"/>
+  </div>
   
-  <span class="sidebar-brand-text">Agentic Mobility</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -215,6 +220,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../guide/experiments.html">Experiments</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/llm.html">Language models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/events.html">Places and events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/cabin.html">The decision record and the cabin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/extending.html">Extending</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference</span></p>
@@ -273,12 +279,43 @@ current state, the actions and the exogenous input, never on how the state was r
 needs no state of its own. This is why a recorded run can be replayed decision by decision to the identical
 state, and why the same model can be put behind any agent.</p>
 </section>
+<section id="decisions-that-take-time">
+<h2>Decisions that take time<a class="headerlink" href="#decisions-that-take-time" title="Link to this heading">¶</a></h2>
+<p>A kind’s decisions may take time (<code class="docutils literal notranslate"><span class="pre">agents.&lt;kind&gt;.think_seconds</span></code>). The agent is shown the state as it is, and
+its decision takes effect that much later, whoever decides: a rule, an algorithm or a language model. In
+between the world moves on and the agent carries on as it was. When the decision takes effect it is carried
+over to the state as it is by then; if it no longer applies (the car has passed the turning, the bus has
+come) it is dropped as having come too late, and the agent is asked again if there is still something to
+decide. A traveller who has a say starts deciding early enough to have decided when the trip is due.</p>
+<p>Two things follow. A rule and a language model are compared like for like, both taking the same time. And
+because an answer is not needed before the decision takes effect, the calls to a language model made within
+one thinking time run side by side instead of each holding up the clock. On the testbed a traveller takes two
+minutes over how to travel, a car half a minute over its route, a charging station and the orchestrator a
+minute.</p>
+</section>
 <section id="traffic">
 <h2>Traffic<a class="headerlink" href="#traffic" title="Link to this heading">¶</a></h2>
-<p>Roads congest: the speed on a road falls linearly with the number of vehicles on it. A junction with traffic
-lights holds vehicles at the end of their road until their approach has green; they are let through in
-arrival order at the saturation flow, and a change of green costs a few seconds. Each simulated car stands
-for several real ones (<code class="docutils literal notranslate"><span class="pre">network.capacity_scale</span></code>).</p>
+<p>Roads are queues (<code class="docutils literal notranslate"><span class="pre">network.traffic:</span> <span class="pre">queue</span></code>). Every road has an exit capacity, the vehicles per hour and lane
+that can leave it, and a storage, the vehicles that fit on it bumper to bumper. A vehicle drives along a road
+at the free speed, then waits at its end, first come first served, until the exit has capacity for it and the
+next road has room. A full road lets nobody in, so its queue grows back onto the road behind it; room that
+opens at the front of a full road reaches its entrance only once the gap has travelled back along the queue.
+A junction with traffic lights lets a road out only while its approach has green, at the saturation flow, and
+a change of green costs a few seconds. An incident or bad weather cuts what a road lets out as it cuts its
+speed. Each simulated car stands for several real ones (<code class="docutils literal notranslate"><span class="pre">network.capacity_scale</span></code>).</p>
+<p>This is the link transmission model applied to single vehicles, the theory behind MATSim’s queue model and
+UXsim. Given the same network, vehicles, departure times and routes it reproduces the theoretical delay of
+elementary cases within 3% and UXsim’s mean trip times on the testbed’s network within 1% to 6%
+(<code class="docutils literal notranslate"><span class="pre">experiments/uxsim_check.py</span></code>). The earlier model, in which a road slows with the vehicles on it and never
+fills, remains as <code class="docutils literal notranslate"><span class="pre">network.traffic:</span> <span class="pre">density</span></code>.</p>
+</section>
+<section id="checking-a-run">
+<h2>Checking a run<a class="headerlink" href="#checking-a-run" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">agmsim</span> <span class="pre">check</span></code> runs a scenario and holds it against a fixed list: every trip has one outcome, vehicles are
+conserved on every road, no car is faster than free flow, no road holds more than fits on it or lets through
+more than its capacity, the same seed gives the same run, and with more travellers or less road car trips do
+not get quicker. For the testbed the list ends with the survey numbers it is tuned to, see
+<a class="reference internal" href="../testbed.html"><span class="std std-doc">The testbed: a simplified Montreal</span></a>.</p>
 </section>
 <section id="reproducibility">
 <h2>Reproducibility<a class="headerlink" href="#reproducibility" title="Link to this heading">¶</a></h2>
@@ -356,7 +393,9 @@ decisions.</p>
             <ul>
 <li><a class="reference internal" href="#">The engine</a><ul>
 <li><a class="reference internal" href="#a-controlled-markov-process">A controlled Markov process</a></li>
+<li><a class="reference internal" href="#decisions-that-take-time">Decisions that take time</a></li>
 <li><a class="reference internal" href="#traffic">Traffic</a></li>
+<li><a class="reference internal" href="#checking-a-run">Checking a run</a></li>
 <li><a class="reference internal" href="#reproducibility">Reproducibility</a></li>
 </ul>
 </li>

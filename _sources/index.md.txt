@@ -4,6 +4,11 @@ hide-toc: true
 
 # Agentic Mobility
 
+<p class="hero-logo">
+<img class="only-light" src="_static/agmsim-logo.png" alt="AgMSim: Agentic Mobility" width="1200" height="318">
+<img class="only-dark" src="_static/agmsim-logo-dark.png" alt="AgMSim: Agentic Mobility" width="1200" height="318">
+</p>
+
 <p class="tagline"><strong>AgMSim</strong>, the Agentic Mobility Simulator, is a testbed for mobility systems in
 which every participant can be an agent: travellers, their cars, on-demand cars, transit, charging stations,
 traffic lights and the orchestrator of the network.</p>
@@ -120,6 +125,7 @@ concepts/outcomes
 guide/experiments
 guide/llm
 guide/events
+guide/cabin
 guide/extending
 ```
 

@@ -17,7 +17,7 @@
     waiting.set(next, {resolve, reject});
     worker.postMessage({id: next++, path, body});
   });
-  const repo = "https://github.com/Nicholas0027/AgMSim";
+  const repo = "https://github.com/hmts-lab/AgMSim";
   if (repo.startsWith("http")) {
     const link = document.createElement("a");
     link.href = repo; link.textContent = "Source and local install on GitHub"; link.style.marginLeft = "auto";

@@ -10,7 +10,7 @@ traffic lights and the orchestrator of the network.</p>
 
 <a class="start-button" href="simulator/index.html">Start the simulator</a>
 <a class="start-button quiet" href="quickstart/installation.html">Install</a>
-<a class="start-button quiet" href="https://github.com/Nicholas0027/AgMSim">Source</a>
+<a class="start-button quiet" href="https://github.com/hmts-lab/AgMSim">Source</a>
 
 ## Start
 
@@ -73,7 +73,7 @@ charging stations, an orchestrator, and a crash on the Decarie expressway at 07:
 ## Install
 
 ```bash
-git clone https://github.com/Nicholas0027/AgMSim.git && cd AgMSim
+git clone https://github.com/hmts-lab/AgMSim.git && cd AgMSim
 uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -e ".[dev]"
 .venv/bin/agmsim run montreal
 ```
@@ -83,7 +83,7 @@ See [](quickstart/installation.md).
 ## Status
 
 An early prototype: see [](status.md). Questions and problems:
-[issues on GitHub](https://github.com/Nicholas0027/AgMSim/issues).
+[issues on GitHub](https://github.com/hmts-lab/AgMSim/issues).
 
 ```{toctree}
 :hidden:

@@ -12,7 +12,7 @@ go straight from your browser to the provider.
 Python 3.10 or newer.
 
 ```bash
-git clone https://github.com/Nicholas0027/AgMSim.git
+git clone https://github.com/hmts-lab/AgMSim.git
 cd AgMSim
 uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -e ".[dev]"
 ```

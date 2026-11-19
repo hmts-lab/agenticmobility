@@ -5,13 +5,14 @@ hide-toc: true
 # Agentic Mobility
 
 <p class="hero-logo">
-<img class="only-light" src="_static/agmsim-logo.png" alt="AgMSim: Agentic Mobility" width="1200" height="318">
-<img class="only-dark" src="_static/agmsim-logo-dark.png" alt="AgMSim: Agentic Mobility" width="1200" height="318">
+<img class="only-light" src="_static/agmsim-logo.png" alt="AgMSim: Agentic Mobility Systems Simulator" width="960" height="283">
+<img class="only-dark" src="_static/agmsim-logo-dark.png" alt="AgMSim: Agentic Mobility Systems Simulator" width="960" height="283">
 </p>
 
-<p class="tagline"><strong>AgMSim</strong>, the Agentic Mobility Simulator, is a testbed for mobility systems in
-which every participant can be an agent: travellers, their cars, on-demand cars, transit, charging stations,
-traffic lights and the orchestrator of the network.</p>
+<p class="tagline"><strong>AgMSim</strong>, the Agentic Mobility Systems Simulator, is a framework for researchers to
+build their own agentic mobility systems and algorithms on, and to test them. Every participant can be an agent:
+travellers, their cars, on-demand cars, transit, charging stations, traffic lights and the orchestrator of the
+network.</p>
 
 <a class="start-button" href="simulator/index.html">Start the simulator</a>
 <a class="start-button quiet" href="quickstart/installation.html">Install</a>
@@ -20,7 +21,7 @@ traffic lights and the orchestrator of the network.</p>
 ## Start
 
 The simulator runs in this page, in your browser: nothing to install, nothing sent to a server. It opens on
-the testbed, a simplified Montreal on a weekday morning. Set who decides for each kind of agent and how much
+the testbed that comes with it, a simplified Montreal on a weekday morning. Set who decides for each kind of agent and how much
 it may decide, press **Run**, and click any decision to see what the agent saw. The page opens with a language
 model deciding for most kinds, which needs your own API key; **built-in for all** runs at once without one.
 
@@ -45,6 +46,12 @@ of the others,
 
 and then measures what that does to the system: waiting time, vehicle miles and hours travelled, traffic speed.
 
+It is meant to be built on. A decision model of your own (a rule, an optimiser, a learning agent, a language
+model, a service written in any language) takes the place of a built-in one by name; a new kind of agent is
+one class; the network, the demand and the measures are replaced the same way. What comes packaged (the
+testbed below, the built-in models, the numbers on this page) is a starting point and a common reference, not
+the extent of the system. See [](guide/extending.md).
+
 Agency follows the agentic-vehicle literature (Yu et al., *Agentic Vehicles for Human-Centered Mobility*,
 [arXiv:2507.04996](https://arxiv.org/abs/2507.04996)): a continuum distinct from automation. AgMSim
 operationalises it as **decision authority**, the set of actions the environment offers an agent. An agent
@@ -54,14 +61,19 @@ a language model under identical authority.
 
 ## Features
 
+- **A framework to build on.** Decision models, kinds of agent, networks, demand patterns and measures of your
+  own are registered by name and used from a scenario file; an agent can also be a service outside the
+  simulator, in any language.
 - **Every kind of participant is an agent.** Seven kinds are built in: traveller, private car, on-demand car,
   transit vehicle, charging station, traffic light and orchestrator. A new kind is one class.
 - **Agency is a setting, not a property of the model.** Levels L0 to L4, or any subset of permissions, per kind
   or for a share of a kind.
 - **Any decision model behind any agent.** Rules, algorithms, language models and remote services receive the
   same observation and the same memory, so they can be compared like for like.
-- **One testbed.** A simplified Montreal of 25 nodes and 51 roads, in the way transport research uses Sioux
-  Falls. Experiments change settings of the testbed; they do not bring a network of their own.
+- **A testbed comes with it.** A simplified Montreal, in the way transport research uses Sioux Falls: 25 nodes
+  and 51 roads as packaged today. How many travel, the fleets, the lines, the events and every agent's model and
+  level are settings of a scenario. Our own experiments change those settings and keep the network, so that
+  their results can be compared; a network of your own can be read from tables.
 - **Reproducible runs with language models.** Every decision is recorded with what the agent saw; a run is
   replayed from its decisions to the identical state, without the model.
 
@@ -71,9 +83,11 @@ a language model under identical authority.
 :file: _static/testbed.html
 ```
 
-A weekday morning from 06:00 to 12:00 on the island of Montreal, its crossings, the South Shore and Laval:
-900 travellers, their cars, 40 on-demand cars, four transit lines, traffic lights in the inner city, seven
-charging stations, an orchestrator, and a crash on the Decarie expressway at 07:30. See [](testbed.md).
+As packaged: a weekday morning from 06:00 to 12:00 on the island of Montreal, its crossings, the South Shore
+and Laval, with 900 travellers, their cars, 12 on-demand cars, four transit lines, traffic lights in the inner
+city, seven charging stations, an orchestrator, and a crash on the Decarie expressway at 07:30. Each of these
+is a setting ([](configuration.md)), and the testbed is still being developed, so the numbers may change. See
+[](testbed.md).
 
 ## Install
 

@@ -1,7 +1,12 @@
 # The testbed: a simplified Montreal
 
-Experiments are run on one network, in the way much of transport research uses Sioux Falls (24 nodes): small
-enough to be read off a map, fixed, and the same for everybody. The testbed is the scenario `montreal`.
+A testbed comes with the simulator, in the way much of transport research uses Sioux Falls (24 nodes): small
+enough to be read off a map, and the same for everybody who uses it. It is the scenario `montreal`.
+
+This page describes it as it is packaged today. Its numbers are those of that scenario, not limits of the
+simulator, and they may still change as the testbed is developed: how many travel, the fleets, the lines, the
+events and every agent's model and level are settings ([](configuration.md)), and a network of your own can
+take the place of this one ([](guide/extending.md)).
 
 ```{raw} html
 :file: _static/testbed.html

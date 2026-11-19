@@ -23,8 +23,8 @@ AgMSim is an early prototype.
 
 - The testbed is an abstraction: positions, lengths, speeds and lanes are approximate. The morning as a whole
   is tuned to six survey numbers of the region (see [](testbed.md)); nothing has been compared road by road.
-- 900 travellers stand for the whole region, so one simulated car is a platoon of some 250 real ones: a short
-  road holds one or two of them. Sizes over the whole morning are right, the traffic on a single road is coarse.
+- In the testbed as packaged, 900 travellers stand for the whole region, so one simulated car is a platoon of
+  some 250 real ones: a short road holds one or two of them. Sizes over the whole morning are right, the traffic on a single road is coarse.
 - Traffic is a queue model per road: no lanes, no car-following, strict first come first served at the end of
   a road.
 - Transit lines are loops; park-and-ride estimates use timetable times.
